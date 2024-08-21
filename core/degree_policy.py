@@ -138,6 +138,7 @@ class DegreePolicy:
                                                  stock_attr["round_stocks"],
                                                  stock_attr["fraction"])
       
+      #TODO: just for testing
       #if buy and stock_num > 0 and account_balance >= stock_num*current_price:
       if buy and stock_num > 0:
         #place buy order
