@@ -1,0 +1,78 @@
+import time
+
+from snbpy.common.domain.snb_config import SnbConfig
+from snbpy.snb_api_client import SnbHttpClient
+from snbpy.snb_api_client import SecurityType
+from snbpy.snb_api_client import OrderSide,Currency
+
+from . import config
+
+class SingletonMeta(type):
+  _instances = {}
+
+  def __call__(cls, *args, **kwargs):
+    if cls not in cls._instances:
+      cls._instances[cls] = super().__call__(*args, **kwargs)
+    return cls._instances[cls]
+
+class SnowBallProxy(metaclass=SingletonMeta):
+  CURRENCY_MAP = {"USD":Currency.USD,"HKD":Currency.HKD}
+  
+  def __init__(self):
+    self.client = None
+    self.last_ts = 0
+    self.sq = 0
+  
+  def get_snowball_client(self) -> SnbHttpClient:
+    if self.client is None: 
+      conf = SnbConfig()
+      conf.sign_type = 'None'
+      conf.snb_server = config.get_snowball_server()
+      conf.account = config.get_snowball_account()
+      conf.key = config.get_snowball_key()
+      conf.snb_port = config.get_snowball_port()
+      conf.timeout = 1000
+      conf.schema = 'https'
+
+      self.client = SnbHttpClient(conf)
+      self.client.login()
+
+    return self.client
+  
+  def gen_order_id(self):
+    t = int(time.time())
+    if self.last_ts == t:
+        if self.sq == 999:
+            raise Exception("too many request in one second")
+        else:
+            self.sq += 1
+    else:
+        self.last_ts = t
+        self.sq = 0
+    return "{}{:03}".format(self.last_ts, self.sq)
+
+  def get_position_list(self):
+    client = self.get_snowball_client()
+    return client.get_position_list()
+  
+  def get_order_list(self):
+    client = self.get_snowball_client()
+    return client.get_order_list()
+  
+  def get_balance(self):
+    client = self.get_snowball_client()
+    return client.get_balance()
+  
+  def place_order(self,buy,symbol,currency,price,quantity):
+    client = self.get_snowball_client()
+    order_id = "tradeorder"+self.gen_order_id()
+    buy_or_sell = OrderSide.BUY if buy else OrderSide.SELL
+    
+    client.place_order(order_id,SecurityType.STK,symbol,"",buy_or_sell,self.CURRENCY_MAP[currency],quantity,price)
+    
+  def cancel_order(self,origin_order_id):
+    client = self.get_snowball_client()
+    order_id = "cancelorder"+self.gen_order_id()
+    client.cancel_order(order_id,origin_order_id)
+  
+  
