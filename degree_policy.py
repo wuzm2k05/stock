@@ -5,6 +5,7 @@ import core.degree_policy as degree_policy
 import core.snowball_proxy as snowball_proxy
 import core.logger as logger
 import core.trade_time as trade_time
+import core.report as report
 
 _log = logger.get_logger()
 
@@ -24,6 +25,7 @@ async def main():
     while True:
       await asyncio.sleep(config.get_policy_check_interval_in_seconds())
       _log.debug("one cycle")
+      report.trigger_report()
       # first check if it is in non-trade time
       if not trade_time.possible_trade_time():
         _log.debug("not in trade time, so skip this cycle")

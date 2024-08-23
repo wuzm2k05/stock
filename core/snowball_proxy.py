@@ -65,14 +65,20 @@ class SnowBallProxy(metaclass=SingletonMeta):
   
   def place_order(self,buy,symbol,currency,price,quantity):
     client = self.get_snowball_client()
-    order_id = "tradeorder"+self.gen_order_id()
+    order_id = "t"+self.gen_order_id() # t for trade order. orderID should <= 20
     buy_or_sell = OrderSide.BUY if buy else OrderSide.SELL
+    use_currency = self.CURRENCY_MAP[currency]
     
-    client.place_order(order_id,SecurityType.STK,symbol,"",buy_or_sell,self.CURRENCY_MAP[currency],quantity,price)
+    response = client.place_order(order_id,SecurityType.STK,symbol,"",buy_or_sell,self.CURRENCY_MAP[currency],int(quantity),price)
+    #response = client.place_order(order_id,SecurityType.STK,"06862","",OrderSide.BUY,Currency.HKD,4000,12.19)
+    if response.result_code != "60000" or "status" not in response.data or response.data["status"] != "REPORTED":
+      raise Exception("place order failed")
+    
+    return response
     
   def cancel_order(self,origin_order_id):
     client = self.get_snowball_client()
-    order_id = "cancelorder"+self.gen_order_id()
-    client.cancel_order(order_id,origin_order_id)
+    order_id = "x"+self.gen_order_id() # x for cancel order.
+    return client.cancel_order(order_id,origin_order_id)
   
   
