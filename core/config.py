@@ -66,8 +66,32 @@ def get_log_destination():
 # logging level: debug info warning error critical
 def get_log_level():
   return config.get('logging', 'level', fallback=os.environ.get('LOGGING_LEVEL',"info"))
-  
 
+#######################################################################################################
+### email config
+def get_send_email_addr():
+  return config.get('email','send_email', fallback=os.environ.get('EMAIL_SEND_EMAIL_ADDR',"79809620@qq.com"))
+
+def get_email_password():
+  return config.get('email','password', fallback=os.environ.get('EMAIL_PASSWORD',"xxxxxxxx"))
+
+def get_to_emails_addr():
+  return config.get('email','to_email', fallback=os.environ.get('EMAIL_TO_EMAILS_ADDR',"79809620@qq.com"))
+
+def get_email_smtp_server():
+  return config.get('email','smtp_server', fallback=os.environ.get('EMAIL_SMTP_SERVER',"smtp.qq.com"))
+
+def get_email_smtp_port():
+  return config.getint('email','smtp_port', fallback=os.environ.get('EMAIL_SMTP_PORT',587))
+
+
+########################################################################################################
+### report policy
+def get_report_start_hour():
+  return config.getint('report','start_hour', fallback=os.environ.get('REPORT_START_HOUR',18))
+
+def get_report_end_hour():
+  return config.getint('report','end_hour', fallback=os.environ.get('REPORT_END_HOUR',20))
 
 ### output all configrations
 def output_configs(log):
