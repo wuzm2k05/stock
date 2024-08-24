@@ -152,8 +152,6 @@ class DegreePolicy:
                                                  stock_attr["round_stocks"],
                                                  stock_attr["fraction"])
       
-      #TODO: just for testing
-      #if buy and stock_num > 0 and account_balance >= stock_num*execute_price:
       if stock_num > 0:
         # adjust the tick
         if buy and stock_attr["stock_currency"] == "HKD":
@@ -165,6 +163,7 @@ class DegreePolicy:
         elif not buy and stock_attr["stock_currency"] == "USD":
           execute_price = price_tick.align_us_tick_price(execute_price,False)
        
+        #TODO:
         #if buy and account_balance < stock_num*execute_price:
         #  _log.warn("no enough balance to buy stock: stock_name: %s, stock_num: %s, buy_price: %s", stock_name,stock_num,execute_price)
         #  raise Exception("no enough balance to buy stock")
