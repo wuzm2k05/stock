@@ -9,12 +9,21 @@ import core.report as report
 
 _log = logger.get_logger()
 
+def check_stock_config_attr(stock_name,stock_attr):
+  """
+  Raise: Exception if stock_attr check fail
+  """
+  if (stock_attr["max_price"] <= stock_attr["min_price"] 
+      or stock_attr["stock_currency"] not in ("USD","HKD")):
+    raise Exception(" %s stock_attr check fail",stock_name)
+
 async def main():
   try:
     config.output_configs(_log)
     min_trade_stocks = config.get_policy_min_trade_stocks()
     stocks = json.loads(config.get_policy_stocks_config())
-    for _, stock_attr in stocks.items():
+    for stock_name, stock_attr in stocks.items():
+      check_stock_config_attr(stock_name,stock_attr)
       # fill the min trade stocks for those stocks which not configured in trade stocks
       if "min_trade_stocks" not in stock_attr:
         stock_attr["min_trade_stocks"] = min_trade_stocks

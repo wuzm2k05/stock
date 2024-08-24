@@ -19,7 +19,6 @@ def is_us_trade_time():
     return False
 
 def is_hk_trade_time():
-  #return True
   # 定义香港时间时区
   hong_kong = pytz.timezone('Asia/Hong_Kong')
   
