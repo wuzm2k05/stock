@@ -39,11 +39,16 @@ if __name__ == '__main__':
     
     #time.sleep(3600)
     
-    balance_response = client.get_balance()
-    print(balance_response.result_code)
+    #balance_response = client.get_balance()
+    #print(balance_response.result_code)
     #for cash in balance_response.data["balance_detail_items"]:
     #    print(cash["currency"],cash["cash"])
-        
+     
+    transaction_list_response = client.get_transaction_list() 
+    #print(transaction_list_response)  
+    for t in transaction_list_response.data["items"]:
+        print(t["symbol"],t["currency"],t["quantity"],t["side"],t["price"],t["order_price"],t["status"])
+         
     #order_list_response=client.get_order_list()
     #print(order_list_response.result_code)
     #for order in order_list_response.data["items"]:
