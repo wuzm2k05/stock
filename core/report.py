@@ -38,7 +38,7 @@ def _report():
   if order_list_response.result_code == "60000":
     for order in order_list_response.data["items"]:
       if order["status"] == "CONCLUDED":
-        msg_body += "  " + order["symbol"] +": " + order["side"]+" "+ str(order["quantity"]) +" "+ str(order["price"]) = "\n"
+        msg_body += "  " + order["symbol"] +": " + order["side"]+" "+ str(order["quantity"]) +" "+ str(order["price"]) + "\n"
   else:
     msg_body += "get order list failed"
     
