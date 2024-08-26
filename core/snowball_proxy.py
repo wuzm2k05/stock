@@ -75,7 +75,7 @@ class SnowBallProxy(metaclass=SingletonMeta):
     client = self.get_snowball_client()
     return client.get_balance()
   
-  def get_transactions(self,min_time,max_time):
+  def get_transactions(self,min_time=None,max_time=None):
     client = self.get_snowball_client()
     return client.get_transaction_list(order_time_min=min_time,order_time_max=max_time)
   
