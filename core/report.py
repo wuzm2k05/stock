@@ -13,7 +13,7 @@ def _report():
   order_list_response = proxy.get_order_list()
   position_list_response = proxy.get_position_list()
   current_ms_ts = int(time.time()*1000)
-  time_one_day_ago = datetime.datetime.now() -datetime.timedelta(hours=224)
+  time_one_day_ago = datetime.datetime.now() -datetime.timedelta(hours=24)
   one_day_before_ms_ts = int(time_one_day_ago.timestamp() * 1000)
   transaction_list = proxy.get_transactions(min_time=one_day_before_ms_ts,max_time=current_ms_ts)
   
@@ -38,7 +38,7 @@ def _report():
   if order_list_response.result_code == "60000":
     for order in order_list_response.data["items"]:
       if order["status"] == "CONCLUDED":
-        msg_body += "  " + order["symbol"] +": " + order["side"]+" "+ str(order["quantity"]) +" "+ str(order["price"])
+        msg_body += "  " + order["symbol"] +": " + order["side"]+" "+ str(order["quantity"]) +" "+ str(order["price"]) = "\n"
   else:
     msg_body += "get order list failed"
     
@@ -46,7 +46,7 @@ def _report():
   if transaction_list.result_code == "60000":
     for t in transaction_list.data["items"]:
       if t["status"] == "CONCLUDED":
-        msg_body += "  " + t["symbol"] +": " + t["side"]+" "+ str(t["quantity"]) +" "+ str(t["price"])
+        msg_body += "  " + t["symbol"] +": " + t["side"]+" "+ str(t["quantity"]) +" "+ str(t["price"]) + "\n"
   else:
     msg_body += "get transaction list failed"
         

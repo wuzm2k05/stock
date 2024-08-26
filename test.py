@@ -1,4 +1,4 @@
-import time
+import time,datetime
 
 from snbpy.common.domain.snb_config import SnbConfig
 from snbpy.snb_api_client import SnbHttpClient
@@ -43,11 +43,12 @@ if __name__ == '__main__':
     #print(balance_response.result_code)
     #for cash in balance_response.data["balance_detail_items"]:
     #    print(cash["currency"],cash["cash"])
-     
-    transaction_list_response = client.get_transaction_list() 
+    
+    
+    #transaction_list_response = client.get_transaction_list(order_time_min=one_day_before_ms_ts,order_time_max=current_ms_ts) 
     #print(transaction_list_response)  
-    for t in transaction_list_response.data["items"]:
-        print(t["symbol"],t["currency"],t["quantity"],t["side"],t["price"],t["order_price"],t["status"])
+    #for t in transaction_list_response.data["items"]:
+    #    print(t["symbol"],t["order_time"],t["currency"],t["quantity"],t["side"],t["price"],t["order_price"],t["status"])
          
     #order_list_response=client.get_order_list()
     #print(order_list_response.result_code)
