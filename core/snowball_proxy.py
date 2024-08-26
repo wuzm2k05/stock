@@ -75,6 +75,10 @@ class SnowBallProxy(metaclass=SingletonMeta):
     client = self.get_snowball_client()
     return client.get_balance()
   
+  def get_transactions(self,min_time,max_time):
+    client = self.get_snowball_client()
+    return client.get_transaction_list(order_time_min=min_time,order_time_max=max_time)
+  
   def place_order(self,buy,symbol,currency,price,quantity):
     client = self.get_snowball_client()
     order_id = "t"+self.gen_order_id() # t for trade order. orderID should <= 20
