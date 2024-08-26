@@ -87,7 +87,7 @@ class DegreePolicy:
       sell_stock_num = sell_stock_num if sell_stock_num > min_trade_stocks else 0
       return False, sell_stock_num, sell_price
     
-    return True, 0
+    return True, 0, 0
   
   def run_policy_for_stock(self,stock_name:str, stock_attr:dict,balance_res,order_list_res,position_list_res):
     try:
