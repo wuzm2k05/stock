@@ -1,4 +1,4 @@
-import time
+import time,datetime
 
 from snbpy.common.domain.snb_config import SnbConfig
 from snbpy.snb_api_client import SnbHttpClient
@@ -6,6 +6,9 @@ from snbpy.snb_api_client import SecurityType
 from snbpy.snb_api_client import OrderSide,Currency
 
 from . import config
+from . import logger
+
+_log = logger.get_logger()
 
 class SingletonMeta(type):
   _instances = {}
@@ -22,6 +25,7 @@ class SnowBallProxy(metaclass=SingletonMeta):
     self.client = None
     self.last_ts = 0
     self.sq = 0
+    self.last_login_time = None
   
   def get_snowball_client(self) -> SnbHttpClient:
     if self.client is None: 
@@ -36,7 +40,15 @@ class SnowBallProxy(metaclass=SingletonMeta):
 
       self.client = SnbHttpClient(conf)
       self.client.login()
-
+      self.last_login_time = datetime.datetime.now()
+    else:
+      current_time = datetime.datetime.now()
+      time_elapsed = current_time - self.last_login_time
+      if time_elapsed.total_seconds() >= 24*60*60: #24 hours (since client token expire time is 25hours)
+        _log.debug("snowball client login again")
+        self.client.login()
+        self.last_login_time = current_time
+      
     return self.client
   
   def gen_order_id(self):

@@ -37,8 +37,10 @@ if __name__ == '__main__':
     client = SnbHttpClient(config)
     client.login()
     
-    #balance_response = client.get_balance()
-    #print(balance_response.result_code)
+    #time.sleep(3600)
+    
+    balance_response = client.get_balance()
+    print(balance_response.result_code)
     #for cash in balance_response.data["balance_detail_items"]:
     #    print(cash["currency"],cash["cash"])
         
