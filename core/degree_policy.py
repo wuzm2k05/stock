@@ -79,7 +79,7 @@ class DegreePolicy:
       
     if stock_willing_for_buy > stocks:
       buy_stock_num = ((stock_willing_for_buy - stocks)/round_stocks)*round_stocks
-      buy_stock_num = buy_stock_num if buy_stock_num > min_trade_stocks else 0
+      buy_stock_num = buy_stock_num if buy_stock_num >= min_trade_stocks else 0
       return True, buy_stock_num, buy_price
     
     if stocks > stock_willing_for_sell:
