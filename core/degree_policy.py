@@ -61,21 +61,21 @@ class DegreePolicy:
     # calculate how many stock we should have
     stock_willing_for_buy = 0
     stock_willing_for_sell = 0
-    buy_price = 0
-    sell_price = 0
+    buy_price = current_price + fraction
+    sell_price = current_price - fraction
     
     for i in range(len(price_degree_array)):
       price = price_degree_array[i]
       if current_price < price-fraction:
         stock_willing_for_buy += stock_num_array[i]
-        buy_price = price
+        buy_price = buy_price if buy_price < price else price
       
       if i > 0:
         if current_price <= price_degree_array[i-1]+fraction:
           # stock_willing_for_sell: how many stocks we want reserve when calcuate selling
           stock_willing_for_sell += stock_num_array[i]
         else:
-          sell_price = price_degree_array[i-1] if price_degree_array[i-1] > sell_price else price
+          sell_price = price_degree_array[i-1] if price_degree_array[i-1] > sell_price else sell_price
       
     if stock_willing_for_buy > stocks:
       buy_stock_num = ((stock_willing_for_buy - stocks)/round_stocks)*round_stocks
@@ -84,7 +84,7 @@ class DegreePolicy:
     
     if stocks > stock_willing_for_sell:
       sell_stock_num = ((stocks - stock_willing_for_sell)/round_stocks)*round_stocks
-      sell_stock_num = sell_stock_num if sell_stock_num > min_trade_stocks else 0
+      sell_stock_num = sell_stock_num if sell_stock_num >= min_trade_stocks else 0
       return False, sell_stock_num, sell_price
     
     return True, 0, 0
@@ -139,7 +139,7 @@ class DegreePolicy:
         return
       
       stocks -= stock_attr["reserve_stocks"]
-      _log.debug("stocks_without_reserve: %s, balance: %s",stocks,account_balance)
+      _log.debug("stocks_without_reserve: %s, current_price: %s, balance: %s",stocks,current_price, account_balance)
       
       #calcuate the degree and run the policy
       buy, stock_num, execute_price = self._cal_buy_sell_stocks(stocks,
