@@ -43,6 +43,7 @@ def _report():
     msg_body += "get order list failed"
     
   msg_body += "\n"
+  msg_body += "Completed Transactions: \n"
   if transaction_list.result_code == "60000":
     for t in transaction_list.data["items"]:
       if t["status"] == "CONCLUDED":
