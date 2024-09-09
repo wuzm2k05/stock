@@ -44,9 +44,11 @@ if __name__ == '__main__':
     #for cash in balance_response.data["balance_detail_items"]:
     #    print(cash["currency"],cash["cash"])
     
-    
-    #transaction_list_response = client.get_transaction_list(order_time_min=one_day_before_ms_ts,order_time_max=current_ms_ts) 
-    #print(transaction_list_response)  
+    current_ms_ts = int(time.time()*1000)
+    time_one_day_ago = datetime.datetime.now() -datetime.timedelta(hours=24)
+    one_day_before_ms_ts = int(time_one_day_ago.timestamp() * 1000)
+    transaction_list_response = client.get_transaction_list(order_time_min=one_day_before_ms_ts,order_time_max=current_ms_ts)
+    print(transaction_list_response)  
     #for t in transaction_list_response.data["items"]:
     #    print(t["symbol"],t["order_time"],t["currency"],t["quantity"],t["side"],t["price"],t["order_price"],t["status"])
          
