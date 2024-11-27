@@ -27,9 +27,6 @@ def get_snowball_key():
 def get_snowball_account():
   return config.get('snowball','account', fallback=os.environ.get('SNOWBALL_ACCOUNT', ''))
 
-def get_snowball_token():
-  return config.get('snowball','token', fallback=os.environ.get('SNOWBALL_TOKEN', ''))
-
 def get_snowball_server():
   return config.get('snowball','server', fallback=os.environ.get('SNOWBALL_SERVER', 'sandbox.snbsecurities.com'))
 
