@@ -1,4 +1,4 @@
-import traceback
+import traceback,math
 
 from . import trade_time
 from . import snowball_proxy
@@ -17,12 +17,12 @@ class DegreePolicy:
     return prices
   
   def _calculate_stock_num_array(self,price_degree_array,total_money,num_degree,round_stocks):
-    balance_each_degree = round(total_money/(num_degree-1))
+    balance_each_degree = math.floor(total_money/(num_degree-1))
     stock_num_array = [0]
     stock_left = 0
     for price in price_degree_array[1:]:
-      stock_num_price = round(balance_each_degree/price)
-      stock_for_this_price = round((stock_num_price + stock_left)/round_stocks)*round_stocks
+      stock_num_price = math.floor(balance_each_degree/price)
+      stock_for_this_price = math.floor((stock_num_price + stock_left)/round_stocks)*round_stocks
       stock_left = (stock_num_price + stock_left) - stock_for_this_price
       stock_num_array.append(stock_for_this_price)
       
