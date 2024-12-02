@@ -45,6 +45,13 @@ def get_policy_stocks_config():
   #{"stock_name":{"stock_currency":"HKD, USD","max_price":"max_price","min_price":"min_price","degree":"degree","total_amount_money":"total_money","reserve_stocks":"how many stocks reserved","round_stocks":"round stocks","min_trade_stocks":1000,"fraction":"fration of price"},}
   return config.get('policy','stocks_config', fallback=os.environ.get('POLICY_STOCKS_CONFIG', ''))
 
+def get_adjust_balance():
+  return config.getboolean('policy', 'adjust_balance', fallback=os.environ.get('POLICY_ADJUST_BALANCE',True))
+
+def get_currency_reserve():
+  #{"HKD":1000,}
+  return config.get('policy','currency_reserve', fallback=os.environ.get('POLICY_CURRENCY_RESERVE', ''))
+
 ################################################################################################
 ### logging system
 def get_log_file_name():

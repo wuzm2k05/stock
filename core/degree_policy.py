@@ -4,17 +4,14 @@ from . import trade_time
 from . import snowball_proxy
 from . import logger
 from . import price_tick
+from . import add_balance
+from . import policy_helper
 
 _log = logger.get_logger()
 
 class DegreePolicy:
   def __init__(self):
     pass
-  
-  def _calculate_price_groups(self,max_price, min_price, num_groups):
-    ratio = (min_price / max_price) ** (1 / (num_groups - 1))
-    prices = [round(max_price * (ratio ** i), 2) for i in range(num_groups)]
-    return prices
   
   def _calculate_stock_num_array(self,price_degree_array,total_money,num_degree,round_stocks):
     balance_each_degree = math.floor(total_money/(num_degree-1))
@@ -53,7 +50,7 @@ class DegreePolicy:
         and sell when the price is (10+0.05)$
     Return: buy_or_sell,stock_num,price
     """
-    price_degree_array = self._calculate_price_groups(max_price,min_price,num_degree)
+    price_degree_array = policy_helper.calculate_price_groups(max_price,min_price,num_degree)
     stock_num_array = self._calculate_stock_num_array(price_degree_array,total_money,num_degree,round_stocks)
     _log.debug("price_degree_array: %s",price_degree_array)
     _log.debug("stock_num_array: %s",stock_num_array)
@@ -141,6 +138,9 @@ class DegreePolicy:
       stocks -= stock_attr["reserve_stocks"]
       _log.debug("stocks_without_reserve: %s, current_price: %s, balance: %s",stocks,current_price, account_balance)
       
+      amount_money_for_stock = stock_attr["total_amount_money"]
+      amount_money_for_stock = add_balance.AddBalance().get_new_amount(stock_name)
+      
       #calcuate the degree and run the policy
       buy, stock_num, execute_price = self._cal_buy_sell_stocks(stocks,
                                                  stock_attr["total_amount_money"],
@@ -170,6 +170,8 @@ class DegreePolicy:
         
         _log.debug("place one order: %s, %s, %s, %s ",buy,stock_name,execute_price,stock_num)
         proxy.place_order(buy,stock_name,stock_attr["stock_currency"],execute_price,stock_num)
+        #TODO: report this action
+        add_balance.AddBalance().report_action(buy,stock_name,stock_attr["stock_currency"],execute_price,stock_num)
         
     except:
       #something wrong happen to this policy, just skip it

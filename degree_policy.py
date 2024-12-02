@@ -7,6 +7,7 @@ import core.logger as logger
 import core.trade_time as trade_time
 import core.report as report
 import core.email as email
+import core.add_balance as add_balance
 
 _log = logger.get_logger()
 
@@ -19,7 +20,6 @@ def check_stock_config_attr(stock_name,stock_attr):
     raise Exception(" %s stock_attr check fail",stock_name)
 
 async def main():
-  
   config.output_configs(_log)
   min_trade_stocks = config.get_policy_min_trade_stocks()
   stocks = json.loads(config.get_policy_stocks_config())
@@ -53,6 +53,8 @@ async def main():
       balance = proxy.get_balance()
       order_list = proxy.get_order_list()
       position_list = proxy.get_position_list()
+      
+      add_balance.AddBalance().trigger_add_balance(balance,order_list,position_list)
       
       #check if responses are okay, otherwise skip this time
       if balance.result_code != "60000" or order_list.result_code != "60000" or position_list.result_code != "60000":
