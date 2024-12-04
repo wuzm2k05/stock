@@ -16,13 +16,14 @@ class DegreePolicy:
   def _calculate_stock_num_array(self,price_degree_array,total_money,num_degree,round_stocks):
     balance_each_degree = math.floor(total_money/(num_degree-1))
     stock_num_array = [0]
-    stock_left = 0
+    left_balance = 0
     for price in price_degree_array[1:]:
-      stock_num_price = math.floor(balance_each_degree/price)
-      stock_for_this_price = math.floor((stock_num_price + stock_left)/round_stocks)*round_stocks
-      stock_left = (stock_num_price + stock_left) - stock_for_this_price
-      stock_num_array.append(stock_for_this_price)
-      
+      stock_num_price = math.floor((balance_each_degree+left_balance)/price)
+      stock_num_for_this_price = math.floor(stock_num_price/round_stocks)*round_stocks
+      stock_for_next = stock_num_price - stock_num_for_this_price
+      left_balance = math.floor(stock_for_next * price)
+      stock_num_array.append(stock_num_for_this_price)
+     
     return stock_num_array
     
   def _cal_buy_sell_stocks(self,

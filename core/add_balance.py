@@ -45,7 +45,9 @@ class AddBalance(metaclass=SingletonMeta):
     for stock_name in stock_list:
       stock_attr = self.stocks[stock_name]
       price_degree_array = policy_helper.calculate_price_groups(stock_attr["max_price"],stock_attr["min_price"],stock_attr["degree"])
-      money_of_stocks = price_degree_array[-1] * stock_position[stock_name]
+      #need to consider reserved stocks
+      number_of_stocks = 0 if stock_position[stock_name] < stock_attr["reserve_stocks"] else stock_position[stock_name] - stock_attr["reserve_stocks"]
+      money_of_stocks = price_degree_array[-1] * number_of_stocks
       if (money_of_stocks > stock_attr["total_amount_money"]):
         _log.warning("why stock: %s stock money: %s is more than total amount: %s", stock_name,money_of_stocks,stock_attr["total_amount_money"])
         return False
