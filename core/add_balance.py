@@ -55,7 +55,8 @@ class AddBalance(metaclass=SingletonMeta):
       money_need_from_balance = stock_attr["total_amount_money"] - money_of_stocks
       if (rest_balance <= money_need_from_balance):
         # no more balance need to adjust
-        return False
+        # even we didn't adjust the amount, we should return true means we success tried.
+        return True
       else:
         rest_balance -= money_need_from_balance
         
