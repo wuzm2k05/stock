@@ -16,7 +16,7 @@ class SingletonMeta(type):
 
 class AddBalance(metaclass=SingletonMeta):
   def __init__(self):
-    self.currency_last_adjust_month = {}
+    self.currency_last_adjust_day = {}
    
     self.stocks = json.loads(config.get_policy_stocks_config())
     self.stocks_by_currency = {}
@@ -66,23 +66,23 @@ class AddBalance(metaclass=SingletonMeta):
     _log.info("stock %s balance has been adjusted to %s",stock_list[0],self.stocks[stock_list[0]]["total_amount_money"])
     return True
   
-  # each month we only adjust once. and when there is no pending order for stocks
+  # each day we only adjust once. and when there is no pending order for stocks
   def trigger_add_balance(self,balance,order_list,position_list):
     if not config.get_adjust_balance():
       # adjust balance not allowed
       return
     
-    current_month = datetime.date.today().month
+    current_day = datetime.date.today().day
     
     # for each currency, calculate the stocks
     for currency,stock_list in self.stocks_by_currency.items():
-      #check if already adjusted this month
-      last_adjust_month = 0
-      if currency not in self.currency_last_adjust_month:
-        self.currency_last_adjust_month[currency] = 0
+      #check if already adjusted this day
+      last_adjust_day = 0
+      if currency not in self.currency_last_adjust_day:
+        self.currency_last_adjust_day[currency] = 0
       
-      last_adjust_month = self.currency_last_adjust_month[currency]
-      if current_month == last_adjust_month:
+      last_adjust_day = self.currency_last_adjust_day[currency]
+      if current_day == last_adjust_day:
         # skip this currency
         continue
       
@@ -109,7 +109,7 @@ class AddBalance(metaclass=SingletonMeta):
         reserve_currency = self.currency_reserve[currency]
         
       if self._do_balance(currency_balance,position_list,stock_list,reserve_currency):
-        self.currency_last_adjust_month[currency] = current_month  
+        self.currency_last_adjust_day[currency] = current_day  
         
   # get the new amount for stock
   def get_new_amount(self,stock_symbol):
