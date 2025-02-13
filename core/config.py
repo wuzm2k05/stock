@@ -48,6 +48,9 @@ def get_policy_stocks_config():
 def get_adjust_balance():
   return config.getboolean('policy', 'adjust_balance', fallback=os.environ.get('POLICY_ADJUST_BALANCE',True))
 
+def get_adjust_decision():
+  return config.getboolean('policy', 'adjust_decision', fallback=os.environ.get('POLICY_ADJUST_DECISION',False))
+
 def get_currency_reserve():
   #{"HKD":1000,}
   return config.get('policy','currency_reserve', fallback=os.environ.get('POLICY_CURRENCY_RESERVE', ''))

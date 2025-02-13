@@ -6,6 +6,7 @@ from . import logger
 from . import price_tick
 from . import add_balance
 from . import policy_helper
+from . import adjust_decision
 
 _log = logger.get_logger()
 
@@ -136,6 +137,9 @@ class DegreePolicy:
         _log.debug("not in us trade time")
         return
       
+      # update the price for adjust decsion
+      adjust_decision.AdjustDecision().update_price(stock_name,current_price)
+      
       stocks -= stock_attr["reserve_stocks"]
       _log.debug("stocks_without_reserve: %s, current_price: %s, balance: %s",stocks,current_price, account_balance)
       
@@ -169,11 +173,14 @@ class DegreePolicy:
         #  _log.warn("no enough balance to buy stock: stock_name: %s, stock_num: %s, buy_price: %s", stock_name,stock_num,execute_price)
         #  raise Exception("no enough balance to buy stock")
         
-        _log.debug("place one order: %s, %s, %s, %s ",buy,stock_name,execute_price,stock_num)
-        proxy.place_order(buy,stock_name,stock_attr["stock_currency"],execute_price,stock_num)
-        #TODO: report this action
-        add_balance.AddBalance().report_action(buy,stock_name,stock_attr["stock_currency"],execute_price,stock_num)
-        
+        # adjust decision based on trend
+        if adjust_decision.AdjustDecision().query(buy,stock_name):
+          _log.debug("place one order: %s, %s, %s, %s ",buy,stock_name,execute_price,stock_num)
+          proxy.place_order(buy,stock_name,stock_attr["stock_currency"],execute_price,stock_num)
+          #TODO: report this action
+          add_balance.AddBalance().report_action(buy,stock_name,stock_attr["stock_currency"],execute_price,stock_num)
+        else:
+          _log.debug("not place order this time since the trend decision")
     except:
       #something wrong happen to this policy, just skip it
       traceback_str = traceback.format_exc()
