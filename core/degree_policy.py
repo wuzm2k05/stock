@@ -179,8 +179,6 @@ class DegreePolicy:
           proxy.place_order(buy,stock_name,stock_attr["stock_currency"],execute_price,stock_num)
           #TODO: report this action
           add_balance.AddBalance().report_action(buy,stock_name,stock_attr["stock_currency"],execute_price,stock_num)
-        else:
-          _log.debug("not place order this time since the trend decision")
     except:
       #something wrong happen to this policy, just skip it
       traceback_str = traceback.format_exc()
