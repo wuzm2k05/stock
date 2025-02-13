@@ -139,12 +139,12 @@ class DegreePolicy:
       stocks -= stock_attr["reserve_stocks"]
       _log.debug("stocks_without_reserve: %s, current_price: %s, balance: %s",stocks,current_price, account_balance)
       
-      amount_money_for_stock = stock_attr["total_amount_money"]
+      #every time use new amount
       amount_money_for_stock = add_balance.AddBalance().get_new_amount(stock_name)
       
       #calcuate the degree and run the policy
       buy, stock_num, execute_price = self._cal_buy_sell_stocks(stocks,
-                                                 stock_attr["total_amount_money"],
+                                                 amount_money_for_stock,
                                                  stock_attr["max_price"],
                                                  stock_attr["min_price"],
                                                  current_price,
