@@ -26,3 +26,17 @@ def align_hk_tick_price(price,up):
 
 def align_us_tick_price(price,up):
   return _align_tick_price(price,up,_us_stock_tick_list)
+
+def align_tick(buy, currency, price):
+  execute_price = price
+  
+  if buy and currency == "HKD":
+    execute_price = align_hk_tick_price(execute_price,True)
+  elif not buy and currency == "HKD":
+    execute_price = align_hk_tick_price(execute_price,False)
+  elif buy and currency == "USD":
+    execute_price = align_us_tick_price(execute_price,True)
+  elif not buy and currency == "USD":
+    execute_price = align_us_tick_price(execute_price,False)
+  
+  return execute_price

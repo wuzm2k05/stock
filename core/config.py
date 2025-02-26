@@ -51,6 +51,9 @@ def get_adjust_balance():
 def get_adjust_decision():
   return config.getboolean('policy', 'adjust_decision', fallback=os.environ.get('POLICY_ADJUST_DECISION',False))
 
+def get_use_order():
+  return config.getboolean('policy', 'use_order', fallback=os.environ.get('USE_ORDER',True))
+
 def get_currency_reserve():
   #{"HKD":1000,}
   return config.get('policy','currency_reserve', fallback=os.environ.get('POLICY_CURRENCY_RESERVE', ''))

@@ -7,6 +7,7 @@ from . import price_tick
 from . import add_balance
 from . import policy_helper
 from . import adjust_decision
+from . import config
 
 _log = logger.get_logger()
 
@@ -29,31 +30,27 @@ class DegreePolicy:
     
   def _cal_buy_sell_stocks(self,
                            stocks,
-                           total_money,
-                           max_price,
-                           min_price,
                            current_price,
-                           num_degree,
                            min_trade_stocks,
                            round_stocks,
-                           fraction):
+                           fraction,
+                           price_degree_array,
+                           stock_num_array):
     """
     Des:
       calculate the stocks we need to buy or sell based on the input information.
     Argument:
       stocks: how many stocks the account have right now.
-      total_money: how much money the accoutn used for this stock.
-      max_price:
-      min_price:
-      num_degree:
       min_trade_stocks: minmum trade stocks. that means if sell or buy stock num is less than this num, shoud not trade.
       round_stocks: 
       fraction: the price fraction. for example, if the degree price is 10$, then we will buy when the price is (10-0.05)$, 
         and sell when the price is (10+0.05)$
+      price_degree_array: 
+      stock_num_array:
     Return: buy_or_sell,stock_num,price
     """
-    price_degree_array = policy_helper.calculate_price_groups(max_price,min_price,num_degree)
-    stock_num_array = self._calculate_stock_num_array(price_degree_array,total_money,num_degree,round_stocks)
+    #price_degree_array = policy_helper.calculate_price_groups(max_price,min_price,num_degree)
+    #stock_num_array = self._calculate_stock_num_array(price_degree_array,total_money,num_degree,round_stocks)
     _log.debug("price_degree_array: %s",price_degree_array)
     _log.debug("stock_num_array: %s",stock_num_array)
     
@@ -88,25 +85,131 @@ class DegreePolicy:
     
     return True, 0, 0
   
-  def run_policy_for_stock(self,stock_name:str, stock_attr:dict,balance_res,order_list_res,position_list_res):
-    try:
+  def make_orders(self,stock_name, order_list_res, stock_attr,fraction,stocks,stock_num_array, price_degree_array,current_price, buy, stock_num, execute_price):
+    """
+    """
+    proxy = snowball_proxy.SnowBallProxy()
+    
+    if stock_num > 0:
       need_exit = False
+      
       #cancel any unfinished order for this stock
-      proxy = snowball_proxy.SnowBallProxy()
-      for order in order_list_res.data["items"]:
-        if order["symbol"] == stock_name:
-          if order["status"] == "REPORTED" or order["status"] == "PART_CONCLUDED":
-            proxy.cancel_order(order["id"])
-            need_exit = True
-          
-          if order["status"] in ("NO_REPORT","WAIT_REPORT","WAIT_WITHDRAW","PART_WAIT_WITHDRAW","PART_WITHDRAW"):
-            need_exit = True
+      if not config.get_use_order():
+        for order in order_list_res.data["items"]:
+          if order["symbol"] == stock_name:
+            if order["status"] == "REPORTED" or order["status"] == "PART_CONCLUDED":
+              proxy.cancel_order(order["id"])
+              need_exit = True
+            
+            if order["status"] in ("NO_REPORT","WAIT_REPORT","WAIT_WITHDRAW","PART_WAIT_WITHDRAW","PART_WITHDRAW"):
+              need_exit = True
         
       if need_exit:
         _log.debug("stock %s cannot be run since there are some pending order need be canncelled",stock_name)
         # if we need to cancel order, need to wait next time run policy. since the balance and stocks may not accurate.
         return
+      else:
+        # place an order to execute
+        # adjust the tick
+        execute_price = price_tick.align_tick(buy,stock_attr["stock_currency"],execute_price)
       
+        # adjust decision based on trend
+        if adjust_decision.AdjustDecision().query(buy,stock_name):
+          _log.debug("place one order: %s, %s, %s, %s ",buy,stock_name,execute_price,stock_num)
+          proxy.place_order(buy,stock_name,stock_attr["stock_currency"],execute_price,stock_num)
+          #TODO: report this action
+          add_balance.AddBalance().report_action(buy,stock_name,stock_attr["stock_currency"],execute_price,stock_num)
+    else:
+      # there is no immediate trade. so we need use order strategy
+      # use order stragy here
+      if not config.get_use_order():
+        return
+      
+      # 1. calculate ( high sell price and volume, low buy price and volume)
+      high_sell_price = 0
+      high_sell_volume = 0
+      low_buy_price = 0 
+      low_buy_volume = 0
+      need_exit = False
+      
+      for i in range(len(price_degree_array)):
+        stocks -= stock_num_array[i]
+        if stocks <= 0:
+          # get the high sell price and volume
+          if i > 0:
+            if price_degree_array[-1] == price_degree_array[i]:
+              # here is the last one
+              if current_price <= price_degree_array[i-1] + fraction:
+                high_sell_price = price_degree_array[i-1]+fraction
+                high_sell_volume = stock_num_array[i]
+              else:
+                need_exit = True
+            else:
+              #normal slot
+              if current_price >= price_degree_array[i+1] - fraction and current_price <= price_degree_array[i-1] + fraction:
+                high_sell_price = price_degree_array[i-1]+fraction
+                high_sell_volume = stock_num_array[i]
+                low_buy_price = price_degree_array[i+1]-fraction
+                low_buy_volume = stock_num_array[i+1]
+              else:
+                need_exit = True
+          else:
+            # this is the first one
+            if current_price >= price_degree_array[0] - fraction:
+              low_buy_price = price_degree_array[i+1]-fraction
+              low_buy_volume = stock_num_array[i+1]
+            else:
+              need_exit = True
+      
+      if need_exit:
+        _log.warning("why current price %s and stocks number %s not match when using ording?",current_price,stocks)  
+        return
+      
+      # now lets place orders,
+      if high_sell_volume > 0:
+        high_sell_price = price_tick.align_tick(False,stock_attr["stock_currency"],high_sell_price)
+        
+      if low_buy_volume > 0:
+        low_buy_price = price_tick.align_tick(True,stock_attr["stock_currency"],low_buy_price)
+       
+      # TODO: need to check if there already have this kind of orders
+      need_cancel_all_orders = False
+      high_order_exist = False
+      low_order_exist = False
+      for order in order_list_res.data["items"]:
+        # we only expect high sell order and low buy order in order list.
+        # so if there is any unexpected order, we should canncel all orders and wait next round.
+        if order["symbol"] == stock_name:
+          if order["status"] == "REPORTED" and not need_cancel_all_orders:
+            if (order["price"] == high_sell_price
+                and order["quantity"] == high_sell_volume
+                and order["side"] == "SELL"):
+              high_order_exist = True
+            elif (order["price"] == low_buy_price
+                and order["quantity"] == low_buy_volume
+                and order["side"] == "BUY"):
+              low_order_exist = True
+            else:
+              need_cancel_all_orders = True
+          
+          if order["status"] in ("NO_REPORT","WAIT_REPORT","WAIT_WITHDRAW","PART_WAIT_WITHDRAW","PART_WITHDRAW","PART_CONCLUDED"):
+            need_cancel_all_orders = True
+          
+          if need_cancel_all_orders and (order["status"] == "REPORTED" or order["status"] == "PART_CONCLUDED"):
+            proxy.cancel_order(order["id"])
+      
+      if not need_cancel_all_orders:
+        # then we need to make sure there are high sell order and low buy order
+        if high_sell_volume > 0 and not high_order_exist:
+          proxy.place_order(False,stock_name,stock_attr["stock_currency"],high_sell_price,high_sell_volume)
+          _log.debug("place one order: False, %s, %s, %s ",stock_name,high_sell_price,high_sell_volume)
+        
+        if low_buy_volume > 0 and not low_order_exist:
+          proxy.place_order(True,stock_name,stock_attr["stock_currency"],low_buy_price,low_buy_volume)
+          _log.debug("place one order: True, %s, %s, %s ",stock_name,low_buy_price,low_buy_volume)
+         
+  def run_policy_for_stock(self,stock_name:str, stock_attr:dict,balance_res,order_list_res,position_list_res):
+    try:
       #find the balance
       account_balance = 0
       for cash in balance_res.data["balance_detail_items"]:
@@ -146,16 +249,19 @@ class DegreePolicy:
       #every time use new amount
       amount_money_for_stock = add_balance.AddBalance().get_new_amount(stock_name)
       
+      #calculate price array and stock number array
+      price_degree_array = policy_helper.calculate_price_groups(stock_attr["max_price"],stock_attr["min_price"],stock_attr["degree"])
+      stock_num_array = self._calculate_stock_num_array(price_degree_array,amount_money_for_stock,stock_attr["degree"],stock_attr["round_stocks"])
+      
       #calcuate the degree and run the policy
       buy, stock_num, execute_price = self._cal_buy_sell_stocks(stocks,
                                                  amount_money_for_stock,
-                                                 stock_attr["max_price"],
-                                                 stock_attr["min_price"],
                                                  current_price,
-                                                 stock_attr["degree"],
                                                  stock_attr["min_trade_stocks"],
                                                  stock_attr["round_stocks"],
-                                                 stock_attr["fraction"])
+                                                 stock_attr["fraction"],
+                                                 price_degree_array,
+                                                 stock_num_array)
       
       if stock_num > 0:
         # adjust the tick
