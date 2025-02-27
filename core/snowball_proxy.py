@@ -94,6 +94,10 @@ class SnowBallProxy(metaclass=SingletonMeta):
   def cancel_order(self,origin_order_id):
     client = self.get_snowball_client()
     order_id = "x"+self.gen_order_id() # x for cancel order.
-    return client.cancel_order(order_id,origin_order_id)
+    response = client.cancel_order(order_id,origin_order_id)
+    if response.result_code != "60000":
+      raise Exception("cancel order failed")
+
+    return response
   
   

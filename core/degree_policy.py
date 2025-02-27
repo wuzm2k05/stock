@@ -140,16 +140,16 @@ class DegreePolicy:
             if price_degree_array[-1] == price_degree_array[i]:
               # here is the last one
               if current_price <= price_degree_array[i-1] + fraction:
-                high_sell_price = price_degree_array[i-1]+fraction
+                high_sell_price = price_degree_array[i-1] + fraction
                 high_sell_volume = stock_num_array[i]
               else:
                 need_exit = True
             else:
               #normal slot
               if current_price >= price_degree_array[i+1] - fraction and current_price <= price_degree_array[i-1] + fraction:
-                high_sell_price = price_degree_array[i-1]+fraction
+                high_sell_price = price_degree_array[i-1] + fraction
                 high_sell_volume = stock_num_array[i]
-                low_buy_price = price_degree_array[i+1]-fraction
+                low_buy_price = price_degree_array[i+1] - fraction
                 low_buy_volume = stock_num_array[i+1]
               else:
                 need_exit = True
@@ -160,6 +160,9 @@ class DegreePolicy:
               low_buy_volume = stock_num_array[i+1]
             else:
               need_exit = True
+          
+          # we found the slot, so break the loop    
+          break
       
       if need_exit:
         _log.warning("why current price %s and stocks number %s not match when using ording?",current_price,stocks)  
@@ -172,7 +175,7 @@ class DegreePolicy:
       if low_buy_volume > 0:
         low_buy_price = price_tick.align_tick(True,stock_attr["stock_currency"],low_buy_price)
        
-      # TODO: need to check if there already have this kind of orders
+      #check if there already have this kind of orders
       need_cancel_all_orders = False
       high_order_exist = False
       low_order_exist = False
@@ -196,6 +199,7 @@ class DegreePolicy:
             need_cancel_all_orders = True
           
           if need_cancel_all_orders and (order["status"] == "REPORTED" or order["status"] == "PART_CONCLUDED"):
+            _log.debug("cancel order: %s %s %s %s",order["id"],order["side"], order["price"], order["quantity"])
             proxy.cancel_order(order["id"])
       
       if not need_cancel_all_orders:
@@ -255,36 +259,13 @@ class DegreePolicy:
       
       #calcuate the degree and run the policy
       buy, stock_num, execute_price = self._cal_buy_sell_stocks(stocks,
-                                                 amount_money_for_stock,
                                                  current_price,
                                                  stock_attr["min_trade_stocks"],
                                                  stock_attr["round_stocks"],
                                                  stock_attr["fraction"],
                                                  price_degree_array,
                                                  stock_num_array)
-      
-      if stock_num > 0:
-        # adjust the tick
-        if buy and stock_attr["stock_currency"] == "HKD":
-          execute_price = price_tick.align_hk_tick_price(execute_price,True)
-        elif not buy and stock_attr["stock_currency"] == "HKD":
-          execute_price = price_tick.align_hk_tick_price(execute_price,False)
-        elif buy and stock_attr["stock_currency"] == "USD":
-          execute_price = price_tick.align_us_tick_price(execute_price,True)
-        elif not buy and stock_attr["stock_currency"] == "USD":
-          execute_price = price_tick.align_us_tick_price(execute_price,False)
-       
-        #TODO:
-        #if buy and account_balance < stock_num*execute_price:
-        #  _log.warn("no enough balance to buy stock: stock_name: %s, stock_num: %s, buy_price: %s", stock_name,stock_num,execute_price)
-        #  raise Exception("no enough balance to buy stock")
-        
-        # adjust decision based on trend
-        if adjust_decision.AdjustDecision().query(buy,stock_name):
-          _log.debug("place one order: %s, %s, %s, %s ",buy,stock_name,execute_price,stock_num)
-          proxy.place_order(buy,stock_name,stock_attr["stock_currency"],execute_price,stock_num)
-          #TODO: report this action
-          add_balance.AddBalance().report_action(buy,stock_name,stock_attr["stock_currency"],execute_price,stock_num)
+      self.make_orders(stock_name,order_list_res,stock_attr,stock_attr["fraction"],stocks,stock_num_array,price_degree_array,current_price,buy,stock_num,execute_price)
     except:
       #something wrong happen to this policy, just skip it
       traceback_str = traceback.format_exc()
