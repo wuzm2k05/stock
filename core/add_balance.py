@@ -1,10 +1,12 @@
-import time,datetime,json
+import time,datetime,json,os
 
 from . import config
 from . import logger
 from . import policy_helper
 
 _log = logger.get_logger()
+
+_SAVE_FILE_PATH = "./stock_balance.json"
 
 class SingletonMeta(type):
   _instances = {}
@@ -27,7 +29,37 @@ class AddBalance(metaclass=SingletonMeta):
       self.stocks_by_currency[stock_attr["stock_currency"]].append(stock_name)
     
     self.currency_reserve = json.loads(config.get_currency_reserve())
-   
+    
+    self.load_balance_from_file()
+  
+  def load_balance_from_file(self):
+    """从文件加载上次保存的 total_amount_money，并确保不小于 config 预设值"""
+    if os.path.exists(_SAVE_FILE_PATH):
+      try:
+        with open(_SAVE_FILE_PATH, "r") as f:
+          saved_data = json.load(f)
+        for stock_name, amount in saved_data.items():
+          if stock_name in self.stocks:
+            self.stocks[stock_name]["total_amount_money"] = max(
+              self.stocks[stock_name]["total_amount_money"], amount
+            )
+        _log.info("成功加载上次保存的 balance 数据")
+      except Exception as e:
+        _log.error("加载 balance 数据失败: %s", str(e))
+  
+  def save_balance_to_file(self):
+    """将当前的 total_amount_money 持久化到文件"""
+    try:
+      with open(_SAVE_FILE_PATH, "w") as f:
+        json.dump(
+          {stock_name: stock_attr["total_amount_money"] for stock_name, stock_attr in self.stocks.items()},
+          f,
+          indent=4
+        )
+      _log.info("成功保存 balance 数据到文件")
+    except Exception as e:
+      _log.error("保存 balance 数据失败: %s", str(e))
+                 
   def _do_balance(self,balance,position_list,stock_list,reserve_currency):
     # compose position map
     rest_balance = balance
@@ -64,6 +96,8 @@ class AddBalance(metaclass=SingletonMeta):
     #TODO: need policy
     self.stocks[stock_list[0]]["total_amount_money"] += round(rest_balance)
     _log.info("stock %s balance has been adjusted to %s",stock_list[0],self.stocks[stock_list[0]]["total_amount_money"])
+    
+    self.save_balance_to_file()
     return True
   
   # each day we only adjust once. and when there is no pending order for stocks
