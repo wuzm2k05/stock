@@ -94,15 +94,14 @@ class DegreePolicy:
       need_exit = False
       
       #cancel any unfinished order for this stock
-      if not config.get_use_order():
-        for order in order_list_res.data["items"]:
-          if order["symbol"] == stock_name:
-            if order["status"] == "REPORTED" or order["status"] == "PART_CONCLUDED":
-              proxy.cancel_order(order["id"])
-              need_exit = True
-            
-            if order["status"] in ("NO_REPORT","WAIT_REPORT","WAIT_WITHDRAW","PART_WAIT_WITHDRAW","PART_WITHDRAW"):
-              need_exit = True
+      for order in order_list_res.data["items"]:
+        if order["symbol"] == stock_name:
+          if order["status"] == "REPORTED" or order["status"] == "PART_CONCLUDED":
+            proxy.cancel_order(order["id"])
+            need_exit = True
+          
+          if order["status"] in ("NO_REPORT","WAIT_REPORT","WAIT_WITHDRAW","PART_WAIT_WITHDRAW","PART_WITHDRAW"):
+            need_exit = True
         
       if need_exit:
         _log.debug("stock %s cannot be run since there are some pending order need be canncelled",stock_name)
