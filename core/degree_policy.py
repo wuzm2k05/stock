@@ -100,7 +100,7 @@ class DegreePolicy:
             proxy.cancel_order(order["id"])
             need_exit = True
           
-          if order["status"] in ("NO_REPORT","WAIT_REPORT","WAIT_WITHDRAW","PART_WAIT_WITHDRAW","PART_WITHDRAW"):
+          if order["status"] in ("NO_REPORT","WAIT_REPORT","WAIT_WITHDRAW","PART_WAIT_WITHDRAW"):
             need_exit = True
         
       if need_exit:
@@ -199,7 +199,7 @@ class DegreePolicy:
             else:
               need_cancel_all_orders = True
           
-          if order["status"] in ("NO_REPORT","WAIT_REPORT","WAIT_WITHDRAW","PART_WAIT_WITHDRAW","PART_WITHDRAW","PART_CONCLUDED"):
+          if order["status"] in ("NO_REPORT","WAIT_REPORT","WAIT_WITHDRAW","PART_WAIT_WITHDRAW","PART_CONCLUDED"):
             need_cancel_all_orders = True
           
           if need_cancel_all_orders and (order["status"] == "REPORTED" or order["status"] == "PART_CONCLUDED"):
