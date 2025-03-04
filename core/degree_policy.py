@@ -133,7 +133,7 @@ class DegreePolicy:
       
       for i in range(len(price_degree_array)):
         stocks -= stock_num_array[i]
-        if stocks <= 0:
+        if stocks == 0:
           # get the high sell price and volume
           if i > 0:
             if price_degree_array[-1] == price_degree_array[i]:
@@ -162,6 +162,11 @@ class DegreePolicy:
           
           # we found the slot, so break the loop    
           break
+        elif stocks < 0:
+          # that means some order partially executed, so we don't handle in order way. 
+          # we just wait untill partially order finished, or immediate (when stock_num > 0) part handle the situation.
+          _log.warning("some order is partillay executed, so skip this order step and wait. stocks: %s",stocks)
+          return
       
       if need_exit:
         _log.warning("why current price %s and stocks number %s not match when using ording?",current_price,stocks)  
