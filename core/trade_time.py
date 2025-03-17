@@ -8,6 +8,10 @@ def is_us_trade_time():
   # 获取当前美东时间
   now = datetime.now(eastern)
   
+  # 判断周末
+  if now.weekday() >= 5:  # 5 (星期六) 或 6 (星期日)
+    return False
+  
   # 定义常规交易时间
   market_open = now.replace(hour=9, minute=30, second=0, microsecond=0)
   market_close = now.replace(hour=16, minute=0, second=0, microsecond=0)
@@ -24,6 +28,10 @@ def is_hk_trade_time():
   
   # 获取当前香港时间
   now = datetime.now(hong_kong)
+  
+  # 判断周末
+  if now.weekday() >= 5:  # 5 (星期六) 或 6 (星期日)
+    return False
   
   # 定义上午和下午的交易时间
   morning_open = now.replace(hour=9, minute=30, second=0, microsecond=0)
