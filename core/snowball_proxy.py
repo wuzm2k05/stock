@@ -7,6 +7,7 @@ from snbpy.snb_api_client import OrderSide,Currency
 
 from . import config
 from . import logger
+from . import types
 
 _log = logger.get_logger()
 
@@ -65,15 +66,40 @@ class SnowBallProxy(metaclass=SingletonMeta):
 
   def get_position_list(self):
     client = self.get_snowball_client()
-    return client.get_position_list()
+    position_res = client.get_position_list()
+    if position_res.result_code != "60000":
+      raise Exception("get position list failed")
+
+    return position_res
   
   def get_order_list(self):
     client = self.get_snowball_client()
-    return client.get_order_list()
+    all_orders = types.OrderListRes()
+    page_number = 1
+    page_size = 10
+    while True:
+      current_orders = client.get_order_list(page=page_number,size=page_size)
+      if current_orders.result_code != "60000":
+        raise Exception("get order faild")
+      
+      items = current_orders.data["items"]
+      if not items or len(items) <= 0:
+        break # no more items. exits the loop
+      for item in items:
+        if item["status"] == "INVALID":
+          # something wrong happened today,do nothing today
+          raise Exception("invaild order found")
+        all_orders.add_order(item)
+        
+    return all_orders
   
   def get_balance(self):
     client = self.get_snowball_client()
-    return client.get_balance()
+    balance_res = client.get_balance()
+    if balance_res.result_code != "60000":
+      raise Exception("get balance failed")
+  
+    return balance_res
   
   def get_transactions(self,min_time=None,max_time=None):
     client = self.get_snowball_client()

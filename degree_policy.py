@@ -56,11 +56,6 @@ async def main():
       
       add_balance.AddBalance().trigger_add_balance(balance,order_list,position_list)
       
-      #check if responses are okay, otherwise skip this time
-      if balance.result_code != "60000" or order_list.result_code != "60000" or position_list.result_code != "60000":
-        _log.warning("proxy get balance,order_list,position_list fail")
-        continue
-      
       #then for each stock, run policy
       for stock_name, stock_attr in stocks.items():
         policy.run_policy_for_stock(stock_name,stock_attr,balance,order_list,position_list)
