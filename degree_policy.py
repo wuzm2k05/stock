@@ -39,7 +39,7 @@ async def main():
       
       if error_info:
         # try send error information last time
-        email.send_email("Internal Error",error_info)
+        email.send_error_email(error_info)
         error_info = None
         
       _log.debug("one cycle")
