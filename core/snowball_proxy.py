@@ -90,6 +90,8 @@ class SnowBallProxy(metaclass=SingletonMeta):
           # something wrong happened today,do nothing today
           raise Exception("invaild order found")
         all_orders.add_order(item)
+      
+      page_number += 1
         
     return all_orders
   
