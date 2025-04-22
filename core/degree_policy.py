@@ -8,6 +8,7 @@ from . import add_balance
 from . import policy_helper
 from . import adjust_decision
 from . import config
+from . import err_probe as ep
 
 _log = logger.get_logger()
 
@@ -206,6 +207,10 @@ class DegreePolicy:
             _log.debug("cancel order: %s %s %s %s",order["id"],order["side"], order["price"], order["quantity"])
             proxy.cancel_order(order["id"])
       
+      if high_sell_volume > 0 and low_buy_volume > 0 and (high_order_exist ^ low_order_exist):
+        # something wrong happend!!!
+        raise Exception("why only one order exists? we actually need high and low order exists")
+      
       if not need_cancel_all_orders:
         # then we need to make sure there are high sell order and low buy order
         if high_sell_volume > 0 and not high_order_exist:
@@ -218,6 +223,13 @@ class DegreePolicy:
          
   def run_policy_for_stock(self,stock_name:str, stock_attr:dict,balance_res,order_list_res,position_list_res):
     try:
+      # checking if there is one recent concluded order
+      # since snowball agent has consistent issue!!!(if there is one concluded order, the stock number will be updated few seconds laster instead of simultaneously)
+      # it is big issue for us!!! need to avoid it!!! so if there is a recent concluded order, need to skip one cycle to wait stock number be updated!
+      if ep.has_recent_concluded_order(order_list_res,stock_name):
+        _log.warning("find a recent concluded order for %s, so skip this cycle",stock_name)
+        return
+      
       #find the balance
       account_balance = 0
       for cash in balance_res.data["balance_detail_items"]:
