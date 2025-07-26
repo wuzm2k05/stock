@@ -14,7 +14,7 @@ class SingletonMeta(type):
 class AdjustDecision(metaclass=SingletonMeta):
   def __init__(self):
     self.stocks = {}
-    self.enable = config.get_adjust_decision() or config.get_use_order() # if use order, then cannot adjust decision
+    self.enable = config.get_adjust_decision() and not config.get_use_order() # if use order, then cannot adjust decision
   
   def update_price(self,stock,current_price):
     if not self.enable:
