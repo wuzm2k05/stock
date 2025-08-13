@@ -21,13 +21,16 @@ def check_stock_config_attr(stock_name,stock_attr):
 
 async def main():
   config.output_configs(_log)
-  min_trade_stocks = config.get_policy_min_trade_stocks()
+  #min_trade_stocks = config.get_policy_min_trade_stocks()
   stocks = json.loads(config.get_policy_stocks_config())
   for stock_name, stock_attr in stocks.items():
     check_stock_config_attr(stock_name,stock_attr)
+    #!!! right now min_trade_stocks must be equal to round stocks
+    stock_attr["min_trade_stocks"] = stock_attr["round_stocks"]
+    
     # fill the min trade stocks for those stocks which not configured in trade stocks
-    if "min_trade_stocks" not in stock_attr:
-      stock_attr["min_trade_stocks"] = min_trade_stocks
+    #if "min_trade_stocks" not in stock_attr:
+    #  stock_attr["min_trade_stocks"] = min_trade_stocks
     
   proxy = snowball_proxy.SnowBallProxy()
   policy = degree_policy.DegreePolicy()
