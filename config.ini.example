@@ -1,0 +1,26 @@
+[snowball]
+key=11111111
+account=11111111
+server=sandbox.snbsecurities.com
+
+[policy]
+check_interval_in_seconds=60
+stocks_config={"06862":{"stock_currency":"HKD","max_price":20,"min_price":12,"degree":18,"total_amount_money":1600000,"reserve_stocks":1000,"round_stocks":1000,"min_trade_stocks":1000,"fraction":0.05}}
+adjust_balance=false
+adjust_decision=false
+use_order=true
+currency_reserve={"HKD":0}
+
+[logging]
+destination=file,console
+level=debug
+
+[email]
+send_email = 99999999@qq.com
+password = 99999999
+to_emails = 99999999@qq.com
+smtp_server = smtp.qq.com
+smtp_port = 587
+
+[report]
+end_hour=23
